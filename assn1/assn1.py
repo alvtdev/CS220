@@ -19,19 +19,21 @@ def addRows(r1, r2):
 
 #finds position of either min or max within a row
 #exclude last number from search
-def findMaxIndex(row):
-    maxNumIndex = 0
-    for i in range(0, len(row)-1):
-        if row[i] > row[maxNumIndex]:
-            maxNumIndex = i
-    return maxNumIndex
-
 def findMinIndex(row):
     minNumIndex = 0
     for i in range(0, len(row)-1):
         if row[i] < row[minNumIndex]:
             minNumIndex = i
     return minNumIndex
+
+#finding max index may not be necessary for maximization
+# but will be left here in case.
+def findMaxIndex(row):
+    maxNumIndex = 0
+    for i in range(0, len(row)-1):
+        if row[i] > row[maxNumIndex]:
+            maxNumIndex = i
+    return maxNumIndex
 
 #multiplies a row by a constant 
 def multRow(row, const):
@@ -73,3 +75,9 @@ inputLines = [[float(x) for x in lst] for lst in inputLines]
 
 #TODO:separate input matrix to A, b, c^t
 #     generate simplex tableau
+
+#note: Bland's Rule
+# 1. select lowest-numbered nonbasic column with negative cost
+# 2. choose the one with the lowest ratio between RH + coefficient in pivot
+#    if min ratio is shared by more than 1 row, 
+#    choose row with lowest numbered column
