@@ -1,19 +1,22 @@
 #!/usr/bin/python
 
 #imports
+import os
 import sys
 import numpy
 
+outputFileName = "simplex.out"
 #helper functions for tableau computations
 
 #other helper functions potentially needed:
 # generate tableau from constraints
-# select pivot 
+def tableauGen(B, A, C):
+    return
 
 #returns sum of two tableau rows
 def addRows(r1, r2):
-    rsum = [0 for i in range(len(row1))]
-    for i in range (len(row1)):
+    rsum = [0 for i in range(len(r1))]
+    for i in range (len(r1)):
         rsum[i] = r1[i] + r2[i]
     return rsum
 
@@ -45,36 +48,169 @@ def multRow(row, const):
 #checks solution for optimality
 # if optimal return "OPTIMAL", else return "SUBOPTIMAL"
 # takes in a row as input, should only be used on last row of tableau
-# TODO: expand this or create new helper functions to determine 
-#        bounded-infeasible & unbounded
 def checkSol(row):
     #if all entries are non-negative, return optimal
     isOptSol = "OPTIMAL"
     for i in row:
-    #if a negative entry is found, return suboptimal
+        #if a negative entry is found, return suboptimal
         if i < 0:
             isOptSol = "SUBOPTIMAL"
     return isOptSol
 
+#takes matrix of ratios as input and checks for unbounded
+#if unbounded, write "+inf" to output file and exits
+#NOTE: fix - checking for unbounded is not simply finding "+inf"
+#  dividing by zero throws an error
+#  possible solution: take in array of pivot values and check if any are zero
+#    -must create pivot array first. 
+def checkUnbounded(row): 
+    for i in row:
+        if i == 0.0:
+            file = open(outputFileName, 'w')
+            file.write("+inf") 
+            file.close() 
+            exit(0)
+    return
+
+#takes B as input, checks for negative val (negative = bounded infeasible)
+#TODO: fix - only x>=0 is implicit, not s>=0
+def checkInfeasible(row):
+    for i in row:
+        if i < 0:
+            file = open(outputFileName, 'w')
+            file.write("bounded-infeasible")
+            file.close()
+            exit(0)
+    return
+
+#takes in tableau as input, print ctx & elements of x to file
+def printOptSol(tableau):
+    file = open(outputFileName, 'w') 
+    #first write ctx
+    file.write(str(tableau[-1][-1]))
+    #TODO: then append x values
+    file.close()
+    exit(0)
+    return
+        
+
+#test checkUnbounded, checkInfeasible, printOptSol
+#testrow = [5, 10, float("+inf")]
+#checkUnbounded(testrow)
+#testRow = [5, -3, 7, 9]
+#checkInfeasible(testRow)
+testTableaux = [[0, 1, 0, 0, 0, 12], [0, 0, 1, 0, 0, 14], 
+            [1, 0, 0, 0, 0, 15], [0, 0, 0, 0, 0, 132]]
+#printOptSol(testTableau)
 
 #get arguments, print usage if incorrect
 if (len(sys.argv) > 2):
     print "usage: python assn1.py <filename>"
-else:
-    print 'Opening '+ str(sys.argv[1])
 
 #set filename, get contents of file and put into list
 filename = sys.argv[1]
+
+#if filename doesn't exist in the current directory, output error and exit
+if (not(os.path.exists(filename))):
+    print "Error: " + filename + " not found"
+    exit(0)
+
+#otherwise, continue with simplex program
 with open(filename, 'rb') as file:
     inputLines = [row.strip().split() for row in file]
-#print inputLines
 
 #convert strings in array to floats
 inputLines = [[float(x) for x in lst] for lst in inputLines]
-#print inputLines
 
 #TODO:separate input matrix to A, b, c^t
 #     generate simplex tableau
+
+#separate input into vars & matrices
+numConstraints = inputLines[0][0]
+numVars = inputLines[0][1]
+
+B = inputLines[1]
+C = inputLines[2]
+A = inputLines[3:]
+
+#test output to check input separation validity
+"""
+print "numConstraints = " + str(numConstraints)
+print "numVars = " + str(numVars)
+print "B = " + str(B)
+print "C = " + str(C)
+print "A = " + str(A) 
+"""
+
+#TODO: generate tableau
+#tableau = []
+tableau = [[-1.0, 1.0, 1.0, 0.0, 0.0, 11.0], [1.0, 1.0, 0.0, 1.0, 0.0, 27.0],
+            [2.0, 5.0, 0.0, 0.0, 1.0, 90.0], [-4.0, -6.0, 0.0, 0.0, 0.0, 0.0]]
+
+#var to track if solution is optimal
+optSolStat = "SUBOPTIMAL" 
+#initial check to see if solution is optimal 
+#  (for cases where the first solution is actually optimal)
+optSolStat = checkSol(tableau[-1])
+
+#apply simplex algorithm
+while optSolStat == "SUBOPTIMAL":
+    #find pivot index
+    pivotCol = findMinIndex(tableau[-1])
+    print pivotCol
+    
+    #create row of pivot values for unbounded check
+    pivotVals = []
+    for list in tableau:
+        pivotVals.append(list[pivotCol])
+    print pivotVals
+
+    #check pivot vals for 0 (unbounded solution)
+    checkUnbounded(pivotVals)
+
+    #calculate ratios
+    ratios = []
+    for i in range(0, len(tableau)-1):
+        ratios.append(tableau[i][-1]/pivotVals[i])
+    print ratios
+
+    #determine min ratio
+    pivotRow = findMinIndex(ratios)
+    print pivotRow
+
+    #TODO:perform pivot
+    #   FIXME: ignore values in last column with non-negative elements in corresponding column
+    for i in range(0, len(tableau)):
+        #only perform following operations on rows that are not the pivot row
+        if i != pivotRow:
+            #determine constant
+            multConst =-( pivotVals[i]/pivotVals[pivotRow])
+
+            # multiply pivot row by constant
+            tempRow = multRow(tableau[pivotRow], multConst)
+
+            #sum rows, assign new value to proper list position
+            tableau[i] = addRows(tableau[i], tempRow)
+
+    for list in tableau:
+        print list
+
+    print "\n"
+    #check if new solution is optimal
+    optSolStat = checkSol(tableau[-1])
+
+#now that solution is bounded-feasible and optimal, output to file
+if optSolStat == "OPTIMAL":
+        #print ctx and each element of x
+    print "OPTIMAL SOLUTION FOUND" 
+    printOptSol(tableau)
+
+#NOTE: check for unbounded and bounded infeasible when determining ratios
+#       e.g. if b/0 (inf) => unbounded
+#           output "+inf" to file then exit(0)
+#       e.g. if any ratio is negative => bounded-infeasible
+#           output "bounded-infeasible" to file then exit(0)
+
 
 #note: Bland's Rule
 # 1. select lowest-numbered nonbasic column with negative cost
