@@ -11,7 +11,29 @@ outputFileName = "simplex.out"
 #other helper functions potentially needed:
 # generate tableau from constraints
 def tableauGen(m, n, A, B, C):
-    return
+    #initialize null tableau
+    tableau = []
+    for i in range(0, m+1):
+        nullTableauList = []
+        for i in range(0, m+n+1):
+            nullTableauList.append(0.0)
+        tableau.append(nullTableauList)
+    #assign B values in tableau 
+    for i in range(0, len(B)):
+        tableau[i][len(tableau[i])-1] = B[i]
+    #assign C values in tableau
+    for i in range(0, len(C)):
+        tableau[-1][i] = -C[i]
+    #assign A values in tableau
+    for row in range(0, m):
+        for column in range(0, len(A)-1):
+            tableau[row][column] = A[row][column]
+    #assign slack variables
+    for i in range(0, m):
+        for j in range(0, m):
+            if (i == j):
+                tableau[i][j+n] = 1.0
+    return tableau
 
 #returns sum of two tableau rows
 def addRows(r1, r2):
@@ -126,8 +148,6 @@ def printOptSol(tableau, n):
 #checkUnbounded(testrow)
 #testRow = [5, -3, 7, 9]
 #checkInfeasible(testRow)
-testTableaux = [[0, 1, 0, 0, 0, 12], [0, 0, 1, 0, 0, 14], 
-            [1, 0, 0, 0, 0, 15], [0, 0, 0, 0, 0, 132]]
 #printOptSol(testTableau)
 
 #get arguments, print usage if incorrect
@@ -170,9 +190,18 @@ print "A = " + str(A)
 """
 
 #TODO: generate tableau
-#tableau = []
-tableau = [[-1.0, 1.0, 1.0, 0.0, 0.0, 11.0], [1.0, 1.0, 0.0, 1.0, 0.0, 27.0],
+tableau = tableauGen(numConstraints, numVars, A, B, C)
+"""
+testtableau = [[-1.0, 1.0, 1.0, 0.0, 0.0, 11.0], [1.0, 1.0, 0.0, 1.0, 0.0, 27.0],
             [2.0, 5.0, 0.0, 0.0, 1.0, 90.0], [-4.0, -6.0, 0.0, 0.0, 0.0, 0.0]]
+print "Generated Tableau:"
+for list in tableau:
+    print list
+print "\n Actual Tableau:"
+for list in testtableau:
+    print list
+exit(0)
+"""
 
 #var to track if solution is optimal
 optSolStat = "SUBOPTIMAL" 
