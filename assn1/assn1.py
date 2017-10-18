@@ -31,6 +31,14 @@ def findMinIndex(row):
             minNumIndex = i
     return minNumIndex
 
+def findPivotRow(row):
+    minNumIndex = 0
+    for i in range(0, len(row)):
+        print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
+        if (row[i] < row[minNumIndex] and row[i] > 0) or (row[minNumIndex] < 0):
+            print "new min: " + str(row[i]) + " at index " + str(i)
+            minNumIndex = i
+    return minNumIndex
 #finding max index may not be necessary for maximization
 # but will be left here in case.
 def findMaxIndex(row):
@@ -155,7 +163,6 @@ optSolStat = "SUBOPTIMAL"
 #  (for cases where the first solution is actually optimal)
 optSolStat = checkSol(tableau[-1])
 #list that stores solved rows
-solvedRows = []
 #apply simplex algorithm
 while optSolStat == "SUBOPTIMAL":
     #find pivot index
@@ -178,19 +185,15 @@ while optSolStat == "SUBOPTIMAL":
     print "Calculating Ratios"
     ratios = []
     for i in range(0, len(tableau)-1):
-        if solvedRows != []:
-            for j in solvedRows:
-                if i != j:
-                    ratios.append(tableau[i][-1]/pivotVals[i])
-                else:
-                    ratios.append(float("+inf"))
+        if (pivotVals[i] ==0):
+            ratios.append(float("+inf"))
         else:
             ratios.append(tableau[i][-1]/pivotVals[i])
     print ratios
 
     #determine min ratio
     print "Finding pivot row" 
-    pivotRow = findMinIndex(ratios)
+    pivotRow = findPivotRow(ratios)
     print pivotRow
 
     #TODO:perform pivot
@@ -221,7 +224,6 @@ while optSolStat == "SUBOPTIMAL":
         print list
 
     print "\n"
-    solvedRows.append(pivotRow)
     #check if new solution is optimal
     optSolStat = checkSol(tableau[-1])
 
