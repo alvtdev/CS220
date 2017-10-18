@@ -24,8 +24,10 @@ def addRows(r1, r2):
 #exclude last number from search
 def findMinIndex(row):
     minNumIndex = 0
-    for i in range(0, len(row)-1):
+    for i in range(0, len(row)):
+        print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
         if row[i] < row[minNumIndex]:
+            print "new min: " + str(row[i]) + " at index " + str(i)
             minNumIndex = i
     return minNumIndex
 
@@ -77,7 +79,7 @@ def checkUnbounded(row):
 def checkInfeasible(row):
     for i in row:
         if i < 0:
-            file = open(outputFileName, 'w')
+            file = open(outputFileName, 'w') 
             file.write("bounded-infeasible")
             file.close()
             exit(0)
@@ -152,16 +154,20 @@ optSolStat = "SUBOPTIMAL"
 #initial check to see if solution is optimal 
 #  (for cases where the first solution is actually optimal)
 optSolStat = checkSol(tableau[-1])
-
+#list that stores solved rows
+solvedRows = []
 #apply simplex algorithm
 while optSolStat == "SUBOPTIMAL":
     #find pivot index
+    print "Finding pivot column"
     pivotCol = findMinIndex(tableau[-1])
     print pivotCol
     
     #create row of pivot values for unbounded check
     pivotVals = []
     for list in tableau:
+        #for j in solvedRows:
+        #    if i != j:
         pivotVals.append(list[pivotCol])
     print pivotVals
 
@@ -169,22 +175,40 @@ while optSolStat == "SUBOPTIMAL":
     checkUnbounded(pivotVals)
 
     #calculate ratios
+    print "Calculating Ratios"
     ratios = []
     for i in range(0, len(tableau)-1):
-        ratios.append(tableau[i][-1]/pivotVals[i])
+        if solvedRows != []:
+            for j in solvedRows:
+                if i != j:
+                    ratios.append(tableau[i][-1]/pivotVals[i])
+                else:
+                    ratios.append(float("+inf"))
+        else:
+            ratios.append(tableau[i][-1]/pivotVals[i])
     print ratios
 
     #determine min ratio
+    print "Finding pivot row" 
     pivotRow = findMinIndex(ratios)
     print pivotRow
 
     #TODO:perform pivot
     #   FIXME: ignore values in last column with non-negative elements in corresponding column
+    #first check coefficient of element at [pivotRow][pivotColumn]
+    #  if coefficient is not 1, divide entire row by 1/coeff
+    if tableau[pivotRow][pivotCol] != 1.0:
+        tableau[pivotRow] = multRow(tableau[pivotRow], 1.0/tableau[pivotRow][pivotCol]) 
+        pivotVals[pivotRow] = 1
+        print "NEW MATRIX" 
+        for list in tableau:
+            print list
+
     for i in range(0, len(tableau)):
         #only perform following operations on rows that are not the pivot row
         if i != pivotRow:
             #determine constant
-            multConst =-( pivotVals[i]/pivotVals[pivotRow])
+            multConst =-(pivotVals[i]/pivotVals[pivotRow])
 
             # multiply pivot row by constant
             tempRow = multRow(tableau[pivotRow], multConst)
@@ -192,10 +216,12 @@ while optSolStat == "SUBOPTIMAL":
             #sum rows, assign new value to proper list position
             tableau[i] = addRows(tableau[i], tempRow)
 
+    print "CURRENT TABLEAU"
     for list in tableau:
         print list
 
     print "\n"
+    solvedRows.append(pivotRow)
     #check if new solution is optimal
     optSolStat = checkSol(tableau[-1])
 
