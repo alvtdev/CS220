@@ -10,7 +10,7 @@ outputFileName = "simplex.out"
 
 #other helper functions potentially needed:
 # generate tableau from constraints
-def tableauGen(B, A, C):
+def tableauGen(m, n, A, B, C):
     return
 
 #returns sum of two tableau rows
@@ -22,23 +22,26 @@ def addRows(r1, r2):
 
 #finds position of either min or max within a row
 #exclude last number from search
-def findMinIndex(row):
+def findPivotCol(row):
     minNumIndex = 0
     for i in range(0, len(row)):
-        print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
+        #print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
         if row[i] < row[minNumIndex]:
-            print "new min: " + str(row[i]) + " at index " + str(i)
+            #print "new min: " + str(row[i]) + " at index " + str(i)
             minNumIndex = i
     return minNumIndex
 
+#separate function for finding pivot row is necessary. 
+#must ignore negative values
 def findPivotRow(row):
     minNumIndex = 0
     for i in range(0, len(row)):
-        print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
+        #print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
         if (row[i] < row[minNumIndex] and row[i] > 0) or (row[minNumIndex] < 0):
-            print "new min: " + str(row[i]) + " at index " + str(i)
+            #print "new min: " + str(row[i]) + " at index " + str(i)
             minNumIndex = i
     return minNumIndex
+
 #finding max index may not be necessary for maximization
 # but will be left here in case.
 def findMaxIndex(row):
@@ -69,7 +72,7 @@ def checkSol(row):
 
 #takes matrix of ratios as input and checks for unbounded
 #if unbounded, write "+inf" to output file and exits
-#NOTE: fix - checking for unbounded is not simply finding "+inf"
+#NOTE: checking for unbounded is not simply finding "+inf"
 #  dividing by zero throws an error
 #  possible solution: take in array of pivot values and check if any are zero
 #    -must create pivot array first. 
@@ -84,7 +87,7 @@ def checkUnbounded(row):
 
 #takes B as input, checks for negative val (negative = bounded infeasible)
 #TODO: fix - only x>=0 is implicit, not s>=0
-def checkInfeasible(row):
+def checkInfeasible(row, n):
     for i in row:
         if i < 0:
             file = open(outputFileName, 'w') 
@@ -94,11 +97,25 @@ def checkInfeasible(row):
     return
 
 #takes in tableau as input, print ctx & elements of x to file
-def printOptSol(tableau):
+def printOptSol(tableau, n):
     file = open(outputFileName, 'w') 
     #first write ctx
     file.write(str(tableau[-1][-1]))
+    file.close()
     #TODO: then append x values
+    #declare and initialize a list for x values
+    xVals = []
+    for i in range(0, n):
+        xVals.append(0.0)
+    #determine which x values belong where
+    for list in tableau:
+        for i in range(0, n):
+            if list[i] == 1:
+                xVals[i] = list[-1]
+    #print x values
+    file = open(outputFileName, 'a') 
+    for x in xVals:
+        file.write('\n' + str(x))
     file.close()
     exit(0)
     return
@@ -136,8 +153,8 @@ inputLines = [[float(x) for x in lst] for lst in inputLines]
 #     generate simplex tableau
 
 #separate input into vars & matrices
-numConstraints = inputLines[0][0]
-numVars = inputLines[0][1]
+numConstraints = int(inputLines[0][0])
+numVars = int(inputLines[0][1])
 
 B = inputLines[1]
 C = inputLines[2]
@@ -166,9 +183,9 @@ optSolStat = checkSol(tableau[-1])
 #apply simplex algorithm
 while optSolStat == "SUBOPTIMAL":
     #find pivot index
-    print "Finding pivot column"
-    pivotCol = findMinIndex(tableau[-1])
-    print pivotCol
+    #print "Finding pivot column"
+    pivotCol = findPivotCol(tableau[-1])
+    #print pivotCol
     
     #create row of pivot values for unbounded check
     pivotVals = []
@@ -176,36 +193,37 @@ while optSolStat == "SUBOPTIMAL":
         #for j in solvedRows:
         #    if i != j:
         pivotVals.append(list[pivotCol])
-    print pivotVals
+    #print pivotVals
 
     #check pivot vals for 0 (unbounded solution)
     checkUnbounded(pivotVals)
 
     #calculate ratios
-    print "Calculating Ratios"
+    #print "Calculating Ratios"
     ratios = []
     for i in range(0, len(tableau)-1):
         if (pivotVals[i] ==0):
             ratios.append(float("+inf"))
         else:
             ratios.append(tableau[i][-1]/pivotVals[i])
-    print ratios
+    #print ratios
 
     #determine min ratio
-    print "Finding pivot row" 
+    #print "Finding pivot row" 
     pivotRow = findPivotRow(ratios)
-    print pivotRow
+    #print pivotRow
 
-    #TODO:perform pivot
-    #   FIXME: ignore values in last column with non-negative elements in corresponding column
+    #TODO:check for unbounded and infeasible answers
     #first check coefficient of element at [pivotRow][pivotColumn]
     #  if coefficient is not 1, divide entire row by 1/coeff
     if tableau[pivotRow][pivotCol] != 1.0:
         tableau[pivotRow] = multRow(tableau[pivotRow], 1.0/tableau[pivotRow][pivotCol]) 
         pivotVals[pivotRow] = 1
+        """
         print "NEW MATRIX" 
         for list in tableau:
             print list
+        """
 
     for i in range(0, len(tableau)):
         #only perform following operations on rows that are not the pivot row
@@ -219,19 +237,21 @@ while optSolStat == "SUBOPTIMAL":
             #sum rows, assign new value to proper list position
             tableau[i] = addRows(tableau[i], tempRow)
 
+    """
     print "CURRENT TABLEAU"
     for list in tableau:
         print list
 
     print "\n"
+    """
     #check if new solution is optimal
     optSolStat = checkSol(tableau[-1])
 
 #now that solution is bounded-feasible and optimal, output to file
 if optSolStat == "OPTIMAL":
         #print ctx and each element of x
-    print "OPTIMAL SOLUTION FOUND" 
-    printOptSol(tableau)
+    #print "OPTIMAL SOLUTION FOUND" 
+    printOptSol(tableau, numVars)
 
 #NOTE: check for unbounded and bounded infeasible when determining ratios
 #       e.g. if b/0 (inf) => unbounded
