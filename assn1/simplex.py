@@ -33,11 +33,9 @@ def tableauGen(m, n, A, B, C):
         for j in range(0, m):
             if (i == j):
                 tableau[i][j+n] = 1.0
-    """
     print "Generated Tableau:"
     for list in tableau:
         print list
-    """
     return tableau
 
 #returns sum of two tableau rows
@@ -134,8 +132,8 @@ def checkUnbounded(row):
 
 #takes B as input, checks for negative val (negative = bounded infeasible)
 #TODO: fix - only x>=0 is implicit, not s>=0
-def checkInfeasible(xRow):
-    for i in xRow:
+def checkInfeasible(solRow):
+    for i in solRow:
         if i < 0:
             file = open(outputFileName, 'w') 
             file.write("bounded-infeasible")
@@ -144,19 +142,34 @@ def checkInfeasible(xRow):
     return
 
 #takes in tableau as input, print ctx & elements of x to file
-def printOptSol(tableau, n):
-    #TODO: then append x values
+def printOptSol(tableau, n, m):
     #declare and initialize a list for x values
     xVals = []
     for i in range(0, n):
         xVals.append(0.0)
-    #determine which x values belong where
+    #determine which x solution values
     for list in tableau[:-1]:
         for i in range(0, n):
             if list[i] == 1:
                 xVals[i] = list[-1]
-    #first run check for infeasibility
-    checkInfeasible(xVals);
+    #declare and initialize a list of s values
+    sVals = []
+    for i in range(n, m+n):
+        sVals.append(0.0);
+    #get remaining s solutions
+    for i in range(n, m+n):
+        columnVals = []
+        for list in tableau:
+            columnVals.append(list[i])
+        if sum(columnVals) == 1.0:
+            for j in range(0, len(columnVals)):
+                if columnVals[j] == 1.0:
+                    sVals[j] = tableau[j][-1]
+                
+    #run check for infeasibility on x and s values
+    #if any of these are negative, then solution is bounded-infeasible
+    checkInfeasible(xVals)
+    checkInfeasible(sVals)
     #if not infeasible, print answers
     file = open(outputFileName, 'w') 
     file.write(str(tableau[-1][-1]) + "\n")
@@ -218,21 +231,6 @@ def main():
 
 #TODO: generate tableau
     tableau = tableauGen(numConstraints, numVars, A, B, C)
-    """
-    testtableau = [[-1.0, 1.0, 1.0, 0.0, 0.0, 11.0], [1.0, 1.0, 0.0, 1.0, 0.0, 27.0],
-                [2.0, 5.0, 0.0, 0.0, 1.0, 90.0], [-4.0, -6.0, 0.0, 0.0, 0.0, 0.0]]
-    """
-    """
-    print "Generated Tableau:"
-    for list in tableau:
-        print list
-    """
-    """
-    print "\n Actual Tableau:"
-    for list in testtableau:
-        print list
-    exit(0)
-    """
 
 #var to track if solution is optimal
     optSolStat = "SUBOPTIMAL" 
@@ -250,8 +248,6 @@ def main():
         #create row of pivot values for unbounded check
         pivotVals = []
         for list in tableau:
-            #for j in solvedRows:
-            #    if i != j:
             pivotVals.append(list[pivotCol])
         #print pivotVals
 
@@ -275,7 +271,6 @@ def main():
         #print "Finding pivot row: " 
         #print pivotRow
 
-        #TODO:check for unbounded and infeasible answers
         #first check coefficient of element at [pivotRow][pivotColumn]
         #  if coefficient is not 1, divide entire row by 1/coeff
         if tableau[pivotRow][pivotCol] != 1.0:
@@ -298,13 +293,11 @@ def main():
 
                 #sum rows, assign new value to proper list position
                 tableau[i] = addRows(tableau[i], tempRow)
-        """
         print "CURRENT TABLEAU"
         for list in tableau:
             print list
 
         print "\n"
-        """
         #check if new solution is optimal
         optSolStat = checkSol(tableau[-1])
 
@@ -312,7 +305,7 @@ def main():
     if optSolStat == "OPTIMAL":
             #print ctx and each element of x
         #print "OPTIMAL SOLUTION FOUND" 
-        printOptSol(tableau, numVars)
+        printOptSol(tableau, numVars, numConstraints)
 
 if __name__ == "__main__":
     main()
