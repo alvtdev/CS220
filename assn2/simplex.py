@@ -287,15 +287,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-#NOTE: check for unbounded and bounded infeasible when determining ratios
-#       e.g. if b/0 (inf) => unbounded
-#           output "+inf" to file then exit(0)
-#       e.g. if any ratio is negative => bounded-infeasible
-#           output "bounded-infeasible" to file then exit(0)
-
-
-#note: Bland's Rule
-# 1. select lowest-numbered nonbasic column with negative cost
-# 2. choose the one with the lowest ratio between RH + coefficient in pivot
-#    if min ratio is shared by more than 1 row, 
-#    choose row with lowest numbered column
