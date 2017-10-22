@@ -33,9 +33,11 @@ def tableauGen(m, n, A, B, C):
         for j in range(0, m):
             if (i == j):
                 tableau[i][j+n] = 1.0
+    """
     print "Generated Tableau:"
     for list in tableau:
         print list
+    """
     return tableau
 
 #returns sum of two tableau rows
@@ -50,9 +52,7 @@ def addRows(r1, r2):
 def findPivotCol(row):
     minNumIndex = 0
     for i in range(0, len(row)):
-        #print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
         if row[i] < row[minNumIndex]:
-            #print "new min: " + str(row[i]) + " at index " + str(i)
             minNumIndex = i
     return minNumIndex
 
@@ -64,9 +64,7 @@ def findPivotRow(row):
     # if no number is found at the end of this, then it is unbounded
     minNum = 100000
     for i in range(0, len(row)):
-        #print "comparing " + str(row[minNumIndex]) + " to " + str(row[i])
         if (row[i] < minNum and row[i] > 0) or (row[minNumIndex] < 0):
-            #print "new min: " + str(row[i]) + " at index " + str(i)
             minNumIndex = i
             minNum = row[minNumIndex]
     #now check if a min number has been found
@@ -107,10 +105,6 @@ def checkSol(row):
 
 #takes matrix of ratios as input and checks for unbounded
 #if unbounded, write "+inf" to output file and exits
-#NOTE: checking for unbounded is not simply finding "+inf"
-#  dividing by zero throws an error
-#  possible solution: take in array of pivot values and check if any are zero
-#    -must create pivot array first. 
 def checkUnbounded(row): 
     #check if all pivot column values are negative or zero 
     #use counter to keep track of how many
@@ -131,7 +125,6 @@ def checkUnbounded(row):
     return
 
 #takes B as input, checks for negative val (negative = bounded infeasible)
-#TODO: fix - only x>=0 is implicit, not s>=0
 def checkInfeasible(solRow):
     for i in solRow:
         if i < 0:
@@ -179,40 +172,28 @@ def printOptSol(tableau, n, m):
     sys.exit()
     return
         
-
-#test checkUnbounded, checkInfeasible, printOptSol
-#testrow = [0, -2, -1]
-#checkUnbounded(testrow)
-#sys.exit()
-#testRow = [5, -3, 7, 9]
-#checkInfeasible(testRow)
-#printOptSol(testTableau)
-
 def main():
-#get arguments, print usage if incorrect
+    #get arguments, print usage if incorrect
     if (len(sys.argv) != 2):
         print "usage: python assn1.py <filename>"
         sys.exit()
 
-#set filename, get contents of file and put into list
+    #set filename, get contents of file and put into list
     filename = sys.argv[1]
 
-#if filename doesn't exist in the current directory, output error and exit
+    #if filename doesn't exist in the current directory, output error and exit
     if (not(os.path.exists(filename))):
         print "Error: " + filename + " not found"
         sys.exit()
 
-#otherwise, continue with simplex program
+    #otherwise, continue with simplex program
     with open(filename, 'rb') as file:
         inputLines = [row.strip().split() for row in file]
 
-#convert strings in array to floats
+    #convert strings in array to floats
     inputLines = [[float(x) for x in lst] for lst in inputLines]
 
-#TODO:separate input matrix to A, b, c^t
-#     generate simplex tableau
-
-#separate input into vars & matrices
+    #separate input into vars & matrices
     numConstraints = int(inputLines[0][0])
     numVars = int(inputLines[0][1])
 
@@ -220,7 +201,7 @@ def main():
     C = inputLines[2]
     A = inputLines[3:]
 
-#test output to check input separation validity
+    #test output to check input separation validity
     """
     print "numConstraints = " + str(numConstraints)
     print "numVars = " + str(numVars)
@@ -229,19 +210,17 @@ def main():
     print "A = " + str(A) 
     """
 
-#TODO: generate tableau
     tableau = tableauGen(numConstraints, numVars, A, B, C)
 
-#var to track if solution is optimal
+    #var to track if solution is optimal
     optSolStat = "SUBOPTIMAL" 
-#initial check to see if solution is optimal 
-#  (for cases where the first solution is actually optimal)
+    #initial check to see if solution is optimal 
+    #  (for cases where the first solution is actually optimal)
     optSolStat = checkSol(tableau[-1])
-#list that stores solved rows
-#apply simplex algorithm
+
+    #apply simplex algorithm
     while optSolStat == "SUBOPTIMAL":
         #find pivot index
-        #print "Finding pivot column"
         pivotCol = findPivotCol(tableau[-1])
         #print pivotCol
         
@@ -249,13 +228,13 @@ def main():
         pivotVals = []
         for list in tableau:
             pivotVals.append(list[pivotCol])
+        #print "Pivot Column: "
         #print pivotVals
 
         #check pivot vals for 0 (unbounded solution)
         checkUnbounded(pivotVals)
 
         #calculate ratios
-        #print "Calculating Ratios"
         ratios = []
         for i in range(0, len(tableau)-1):
             if (pivotVals[i] > 0):
@@ -264,11 +243,12 @@ def main():
                 #append some radical negative number as a placeholder for
                 # values that will not result in a valid ratio
                 ratios.append(float("-10000"))
+        #print "Ratios: "
         #print ratios
 
         #determine min ratio
         pivotRow = findPivotRow(ratios)
-        #print "Finding pivot row: " 
+        #print "Pivot row: " 
         #print pivotRow
 
         #first check coefficient of element at [pivotRow][pivotColumn]
@@ -276,11 +256,6 @@ def main():
         if tableau[pivotRow][pivotCol] != 1.0:
             tableau[pivotRow] = multRow(tableau[pivotRow], 1.0/tableau[pivotRow][pivotCol]) 
             pivotVals[pivotRow] = 1
-            """
-            print "NEW MATRIX" 
-            for list in tableau:
-                print list
-            """
 
         for i in range(0, len(tableau)):
             #only perform following operations on rows that are not the pivot row
@@ -293,19 +268,21 @@ def main():
 
                 #sum rows, assign new value to proper list position
                 tableau[i] = addRows(tableau[i], tempRow)
+        """
         print "CURRENT TABLEAU"
         for list in tableau:
             print list
 
         print "\n"
+        """
         #check if new solution is optimal
         optSolStat = checkSol(tableau[-1])
 
-#now that solution is bounded-feasible and optimal, output to file
+    #now that solution determined optimal, output to file 
+    #(and run bounded-infeasible check)
     if optSolStat == "OPTIMAL":
-            #print ctx and each element of x
-        #print "OPTIMAL SOLUTION FOUND" 
         printOptSol(tableau, numVars, numConstraints)
+
 
 if __name__ == "__main__":
     main()
