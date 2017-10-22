@@ -1,5 +1,6 @@
 # Assignment 2: Simplex Method Implementation
 Created by: Alvin Thai
+
 Language: Python
 
 ### How to Compile:
