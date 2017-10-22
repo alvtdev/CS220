@@ -1,10 +1,10 @@
-#Assignment 2: Simplex Method Implementation
+# Assignment 2: Simplex Method Implementation
 Created by: Alvin Thai
 Language: Python
 
-###How to Compile:
+### How to Compile:
 N/A
 
-###How to Run: 
+### How to Run: 
 `python simplex.py inputFile.txt`
 (Where inputFile.txt can be any valid .txt file)
