@@ -4,6 +4,8 @@
 import os
 import sys
 import numpy
+import copy
+import math
 
 outputFileName = "simplex.out"
 #helper functions for tableau computations
@@ -103,6 +105,17 @@ def checkSol(row):
             isOptSol = "SUBOPTIMAL"
     return isOptSol
 
+def checkInt(row):
+    isIntSol = "INTEGRAL"
+    for i in row:
+        #if non-integer is found, then return notInteger
+        if math.fabs(i - int(round(i))) > 0.000001:
+            print int(round(i))
+            print math.fabs(i - int(round(i)))
+            print "NONINTEGRAL"
+            isIntSol = "NONINTEGRAL"
+    return isIntSol
+
 #takes matrix of ratios as input and checks for unbounded
 #if unbounded, write "+inf" to output file and exits
 def checkUnbounded(row): 
@@ -135,7 +148,7 @@ def checkInfeasible(solRow):
     return
 
 #takes in tableau as input, print ctx & elements of x to file
-def printOptSol(tableau, n, m):
+def getOptSol(tableau, n, m):
     #declare and initialize a list for x values
     xVals = []
     for i in range(0, n):
@@ -164,17 +177,19 @@ def printOptSol(tableau, n, m):
     checkInfeasible(xVals)
     checkInfeasible(sVals)
     #if not infeasible, print answers
+    return xVals
+
+def printOptSol(tableau, xVals):
     file = open(outputFileName, 'w') 
     file.write(str(tableau[-1][-1]) + "\n")
     for x in xVals:
         file.write(str(x) + "\n")
     file.close()
     sys.exit()
-    return
 
 def simplex(tableau):
-    solStat = "SUBOPTIMAL"
-    while solStat == "SUBOPTIMAL":
+    optSolStat = "SUBOPTIMAL"
+    while optSolStat == "SUBOPTIMAL":
         #find pivot index
         pivotCol = findPivotCol(tableau[-1])
         #print pivotCol
@@ -273,22 +288,32 @@ def main():
     """
 
     tableau = tableauGen(numConstraints, numVars, A, B, C)
+    origTableau = copy.deepcopy(tableau)
 
     #var to track if solution is optimal
     optSolStat = "SUBOPTIMAL" 
+    #var to track if solution is integers
+    intSolStat = "NONINTEGRAL"
     #initial check to see if solution is optimal 
     #  (for cases where the first solution is actually optimal)
     optSolStat = checkSol(tableau[-1])
 
-    #apply simplex algorithm
-    while optSolStat != "OPTIMAL":
-        optSolStat = simplex(tableau)
-        #if solution is not integer, perform tableau modifications
-        if optSolStat == "NOT INTEGER"
+    while intSolStat == "NONINTEGRAL":
+        #apply simplex algorithm
+        while optSolStat != "OPTIMAL":
+            optSolStat = simplex(tableau)
 
-    #now that solution determined complete, output to file
-    if optSolStat == "OPTIMAL":
-        printOptSol(tableau, numVars, numConstraints)
+        #if optimal solution status is "optimal", check to make sure all are
+        #  integers before printing to file
+        if optSolStat == "OPTIMAL":
+            xVals = getOptSol(tableau, numVars, numConstraints)
+            intSolStat = checkInt(xVals)
+            #print to file if integral, else perform tableau manip and loop again
+            if intSolStat == "INTEGRAL": 
+                printOptSol(tableau, xVals)
+            else: 
+                print "Non integral solutions found"
+                sys.exit()
 
 
 if __name__ == "__main__":
