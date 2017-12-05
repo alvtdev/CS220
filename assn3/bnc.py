@@ -249,6 +249,14 @@ def simplex(tableau):
         optSolStat = checkSol(tableau[-1])
     return optSolStat
         
+def compCut(tableau, xVals):
+    print "TODO: compute cut and get new constraints"
+    #steps:
+    #1. compute cut
+    #2. obtain new constraints
+    #3. append constraints to tableau (then run simplex again)
+    return tableau
+
 def main():
     #get arguments, print usage if incorrect
     if (len(sys.argv) != 2):
@@ -313,6 +321,7 @@ def main():
                 printOptSol(tableau, xVals)
             else: 
                 print "Non integral solutions found"
+                #tableau = 
                 sys.exit()
 
 
