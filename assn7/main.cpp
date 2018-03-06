@@ -146,6 +146,8 @@ int main (int argc, char **argv) {
     /****************************READ OPS.IN****************************/
     //Assay Ops Variables
     int n_assay_ops = 0;
+    float mix_importance = 0.0; 
+    vector<int> ops;
 
     printf("\nReading from ops.in... \n");
     cout << "TODO: COMPLETE ASSAY OPS" << endl;
@@ -156,6 +158,8 @@ int main (int argc, char **argv) {
     }
     inFS >> n_assay_ops;
     cout << "n_assay_ops = " << n_assay_ops << endl;
+    for(unsigned i = 0; i < n_assay_ops; i++) {
+    }
  /* Assay Ops - "ops.in"
  *      - N_ops = number of ops in assay
  *      - N_ops lines, ea. line describes an assay op w/ id #s 1-...-N_ops
@@ -206,7 +210,6 @@ int main (int argc, char **argv) {
         commGraph.at(tempY-1).at(tempX-1) = 1;
     }
     printVec(commGraph);
-    return 0;
 
     inFS.close();
 
@@ -221,5 +224,9 @@ int main (int argc, char **argv) {
     inFS >> alpha; 
     cout << "alpha = " << alpha << endl;
     inFS.close();
+
+    /****************************BEGIN PLACEMENT****************************/
+    vector<vector<int> > solGrid(dim_M, vector<int> (dim_N));
+
     return 0;
 }
