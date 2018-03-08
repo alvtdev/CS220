@@ -87,11 +87,18 @@ def main(debug = "none"):
     n_assay_ops = 0
     ops_in = read_file("ops.in")
     n_assay_ops = int(ops_in[0][0])
-    # TODO: generate list of ops 
-    print n_assay_ops
+    ops_in = ops_in[1:]
+    ops_list = []
     for row in ops_in:
-        print row
+        if row[0] == "3":
+            ops_list.append([int(row[0]), float(row[1])])
+        else:
+            ops_list.append(map(int, row))
     # print contents for debugging purposes
+    if debug == "ops" or debug == "all":
+        print("n_assay_ops = " + str(n_assay_ops))
+        print("ops_list: ")
+        print_list(ops_list)
 
     ################### READ AND SPLIT GRAPHS.IN ###################
     n_ops = 0
@@ -148,6 +155,8 @@ def main(debug = "none"):
     if debug == "alpha" or debug == "all":
         print("alpha = " + str(alpha))
         print("\n")
+
+    #TODO: Define NSGAII problem given contraints from input files
     return
 
 """
