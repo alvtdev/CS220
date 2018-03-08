@@ -12,6 +12,39 @@ def read_file(filename):
     f.close()
     return raw_in
 
+def write_line(x, f):
+    for item in x:
+        f.write(str(item) + " ")
+    return
+
+def write_results(legal = False, placement = []):
+    #TODO: build output function
+    """ output file format:
+        - Obj(P,C,L)  D_comm(P,C)  T_mix(P,L)  alpha
+            - value of objective function (pos float)
+            - total communication distance (pos int)
+            - latency improvement (pos float)
+            - user-specified param (pos float)
+
+        - n_ops lines describing placement location of each operation
+            - input operation: 1  r_in
+            - output operation: 2  r_out
+            - assay operation (mix): 3  x  y  m  n
+                - (x, y) grid coordinate of upper left hand position of mixer
+                - (m x n) mixer size
+            - other assay operations: t(v)  x  y
+                - t(v) pos int type for operation  
+                - (x, y) grid coordinate of upper left hand position of mixer
+    """
+    f = open("placement.out", "w")
+    if not legal:
+        f.write("No solution found")
+    else:
+        for l in placement:
+            write_line(l, f)
+            f.write("\n")
+    f.close()
+
 def int_map(x):
     y = []
     for i in range(len(x)):
@@ -22,6 +55,7 @@ def print_list(x):
     for l in x:
         print l
     return
+
 
 def main(debug = "none"):
 
@@ -157,29 +191,37 @@ def main(debug = "none"):
         print("\n")
 
     #TODO: Define NSGAII problem given contraints from input files
+    ################### NSGA PLACER ###################
+    """ Notes:
+        - must determine placement of all operations
+        - must determine optimal dimensions of each mixing operation
+            - mixing operation has sizes of 2x2, 2x3(3x2), 1x4(4x1), 2x4(4x2)
+        - start with default NSGAII parameters
+        - if a communication link exists between u and v, reduce communication
+            cost by placing v near u
+
+        *** Characteristics of a legal solution
+        - All assay operations placed within (M-2)x(N-2) subgrid
+            -I/O operations are pre-placed on perimeter, cannot be undone
+        - For interference edge e = (u,v) in E, u and v cannot overlap
+        - Each sensing operation must be placed on electrode with a sensor
+        - Each detection operation must be placed on electrode with a detector
+        - Each heating operation must be placed on electrode with a heater 
+    """
+
+
+    legal = False # flag to determine if legal solution can be found
+    placement = [] # list containing final solution  
+    
+    
+    ################### WRITE RESULTS OUT ###################
+
+    write_results(legal, placement)
+
     return
 
-"""
-problem = DTLZ2()
-algorithm = NSGAII(problem)
-algorithm.run(10000)
-#for solution in algorithm.result:
-    #print(solution.objectives)
-
-import matplotlib.pyplot as plt
-
-plt.scatter([s.objectives[0] for s in algorithm.result],
-        [s.objectives[1] for s in algorithm.result])
-
-plt.xlim([0, 1.1])
-plt.ylim([0, 1.1])
-plt.xlabel("$f_1(x)$")
-plt.ylabel("$f_1(y)$")
-
-plt.show()
-"""
-
 if __name__ == "__main__":
+    # params to assist with debugging
     if len(sys.argv) > 1 and sys.argv[1].lower() == "debug":
         if len(sys.argv) == 3:
             main(debug = sys.argv[2].lower())
